@@ -7,13 +7,14 @@ The repository has two parts:
 | Path | What | Status |
 |---|---|---|
 | `dewmix_source/` | The **live static website** and WhatsApp quote flow (deployed to Hostinger). | In production. See [its README](dewmix_source/README.md). |
-| `backend/` | Django + PostgreSQL system of record (modular monolith). | Being built in stages; not yet serving customers. |
+| `backend/` | Django + PostgreSQL system of record (modular monolith). | All 10 stages implemented and tested; not yet deployed. |
 
 Start with the architecture docs:
 
 - [docs/architecture/current-state.md](docs/architecture/current-state.md): audit of what exists and the issue register
 - [docs/architecture/target-state.md](docs/architecture/target-state.md): the target design and staged plan
 - [docs/adr/](docs/adr/): why key decisions were made
+- [docs/operations/](docs/operations/): deployment, backups, troubleshooting, runbooks · [docs/api/](docs/api/README.md)
 
 ## Local development
 

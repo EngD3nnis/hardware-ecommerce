@@ -359,3 +359,27 @@ Docs from the brief (`data-model.md`, `ai-agents.md`, `security.md`, `docs/opera
 6. **Hosting:** stay on Hostinger for the static site? Where will Django run (a VPS provider preference)?
 7. **Default LLM provider/budget:** which provider to start with and a monthly AI spend ceiling.
 8. **Who are the staff users and their roles** (owner, shop attendant, storekeeper, accounts)? This defines the permission groups.
+
+---
+
+## 11. Implementation status (2026-09-26)
+
+All ten stages are implemented on branch `stage-ops-deployment` (stacked: each `stage-N-*` branch builds on the previous one). 347 tests pass on PostgreSQL 16.
+
+| Stage | Status | Notes / deviations |
+|---|---|---|
+| 1 Stabilise | Done | ADR 0001–0005 |
+| 2 Catalogue + pricing | Done | Legacy import of 1,160 products / 1,105 unique images verified. Audit moved here (ADR 0007). Scaffold apps removed |
+| 3 Inventory + procurement | Done | suppliers + procurement are one `procurement` app |
+| 4 Customers, quotes, orders, payments | Done | quotes + orders are one `sales` app. Order status and payment status are separate fields (ADR 0009). M-Pesa Daraja tested with mocks only |
+| 5 Search + site | Done | PostgreSQL FTS/trigram (ADR 0010). The static site now escapes HTML, and `export_static_catalog` keeps it in sync. It does not yet fetch from the API |
+| 6 Fulfilment | Done | |
+| 7 Notifications / WhatsApp | Done | WhatsApp Cloud API tested with mocks only. `console` backend until credentials exist |
+| 8 AI tools | Done | Anthropic provider implemented and request-shape tested with a mocked client (no live call made). OpenAI/Gemini are explicit placeholders (ADR 0011) |
+| 9 Agents | Done | All ship disabled |
+| 10 Analytics | Done | |
+| Ops | Done | Dockerfile (built and booted), prod compose + Caddy (not deployed), backup/restore scripts (restore verified locally), runbooks |
+
+**Not verified against real external services** (no credentials available): Safaricom Daraja, WhatsApp Cloud API, Anthropic API, S3/R2 object storage, Sentry, and a real production deployment. Each sits behind an adapter with mocked tests, and each should be smoke-tested in its sandbox before go-live.
+
+**Open business questions** (§10) are unchanged. The system has safe defaults for them: price on request, VAT-inclusive retail list, one location, WhatsApp click-to-chat, all agents off.

@@ -32,6 +32,8 @@ JWT_SIGNING_KEY = env("JWT_SIGNING_KEY", default=None)
 DEBUG = False
 ALLOWED_HOSTS: list[str] = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 CSRF_TRUSTED_ORIGINS: list[str] = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
+# Direct peers allowed to set X-Forwarded-For (our reverse proxy), e.g. the Caddy container's IP.
+TRUSTED_PROXY_IPS: list[str] = env.list("TRUSTED_PROXY_IPS", default=[])
 
 INSTALLED_APPS = [
     "django.contrib.admin",

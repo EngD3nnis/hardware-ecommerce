@@ -1,0 +1,10 @@
+.git
+.venv
+.env
+.env.*
+**/__pycache__
+**/*.pyc
+backend/media
+backend/staticfiles
+dewmix_source/images.js
+docs

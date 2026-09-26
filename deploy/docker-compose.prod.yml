@@ -1,0 +1,87 @@
+# Production stack on one VPS: Caddy (HTTPS) → Django/Gunicorn, Celery worker + beat, Redis, PostgreSQL.
+# Usage (from the repository root):
+#   cp .env.example deploy/.env.prod   # fill in real values; never commit it
+#   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.prod up -d --build
+# See docs/operations/deployment.md.
+name: dewmix-prod
+
+x-app: &app
+  build: { context: .., dockerfile: Dockerfile }
+  env_file: .env.prod
+  environment:
+    DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    CELERY_BROKER_URL: redis://redis:6379/1
+    CELERY_RESULT_BACKEND: redis://redis:6379/2
+    REDIS_CACHE_URL: redis://redis:6379/0
+    TRUSTED_PROXY_IPS: 172.30.0.10
+  depends_on:
+    postgres: { condition: service_healthy }
+    redis: { condition: service_healthy }
+  volumes:
+    - media:/app/backend/media
+  restart: unless-stopped
+  networks: [internal]
+
+services:
+  web:
+    <<: *app
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8000/health/live')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    <<: *app
+    command: ["celery", "-A", "config", "worker", "-l", "info", "--concurrency", "2"]
+
+  beat:
+    <<: *app
+    command: ["celery", "-A", "config", "beat", "-l", "info", "--schedule", "/tmp/celerybeat-schedule"]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - static:/srv/static:ro
+      - media:/srv/media:ro
+      - caddy-data:/data
+    depends_on: [web]
+    networks:
+      internal: { ipv4_address: 172.30.0.10 }
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"], interval: 10s, retries: 10 }
+    networks: [internal]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redis-data:/data]
+    healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 10s, retries: 10 }
+    networks: [internal]
+
+  # One-off: copy collected static files into the shared volume Caddy serves.
+  static:
+    <<: *app
+    restart: "no"
+    command: ["sh", "-c", "cp -r /app/backend/staticfiles/. /static/"]
+    volumes: [static:/static]
+
+volumes: { postgres-data: {}, redis-data: {}, media: {}, static: {}, caddy-data: {} }
+
+networks:
+  internal:
+    ipam: { config: [{ subnet: 172.30.0.0/24 }] }
