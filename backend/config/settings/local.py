@@ -11,8 +11,9 @@ from .base import SIMPLE_JWT, database_from_env, env
 DEBUG = True
 
 # Development-only fallbacks. production.py never has these.
-SECRET_KEY = env("DJANGO_SECRET_KEY", default="dev-only-insecure-secret-key-do-not-use-in-production")
-SIMPLE_JWT["SIGNING_KEY"] = env("JWT_SIGNING_KEY", default=SECRET_KEY)
+# `or` also covers a key present in .env but left empty.
+SECRET_KEY = env("DJANGO_SECRET_KEY", default="") or "dev-only-insecure-secret-key-do-not-use-in-production"
+SIMPLE_JWT["SIGNING_KEY"] = env("JWT_SIGNING_KEY", default="") or SECRET_KEY
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]  # noqa: S104 - dev server only
 

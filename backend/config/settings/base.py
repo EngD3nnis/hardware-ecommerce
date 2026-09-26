@@ -17,7 +17,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env()
 # Optional .env at the repository root (never committed; see .env.example).
-environ.Env.read_env(BASE_DIR.parent / ".env")
+# Real environment variables always win over values in the file.
+# DJANGO_READ_DOT_ENV=0 skips it (used by tests that must control the environment).
+if env.bool("DJANGO_READ_DOT_ENV", default=True):
+    environ.Env.read_env(BASE_DIR.parent / ".env")
 
 # --- Core -------------------------------------------------------------------
 

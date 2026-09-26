@@ -28,6 +28,7 @@ def load_settings(
     env: dict, code: str = "from django.conf import settings; settings.DEBUG"
 ) -> subprocess.CompletedProcess:
     clean = {k: v for k, v in os.environ.items() if not k.startswith(("DJANGO_", "JWT_", "DATABASE_"))}
+    clean["DJANGO_READ_DOT_ENV"] = "0"  # ignore any developer .env file
     clean.update(env)
     return subprocess.run(  # noqa: S603 - fixed interpreter and code
         [sys.executable, "-c", code],
