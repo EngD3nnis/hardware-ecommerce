@@ -175,7 +175,7 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = ("status", "payment_status", "channel", "delivery_method")
     search_fields = ("number", "customer__name", "customer__phone", "lines__sku")
     inlines = (OrderLineInline, OrderEventInline)
-    actions = ("allocate_orders", "cancel_orders")
+    actions = ("allocate_orders", "start_picking", "cancel_orders")
     readonly_fields = [f.name for f in Order._meta.fields if f.name not in ("notes", "delivery_address")] + ["balance"]
 
     def has_add_permission(self, request):
@@ -200,6 +200,12 @@ class OrderAdmin(admin.ModelAdmin):
             lambda o: services.allocate_order(o, actor(request)),
             "stock reserved",
         )
+
+    @admin.action(description="Start picking (creates the fulfilment)", permissions=["change"])
+    def start_picking(self, request, queryset):
+        from apps.fulfillment import services as fulfillment  # fulfillment depends on sales; import lazily
+
+        run(self, request, queryset, lambda o: fulfillment.start_picking(o, actor(request)), "picking started")
 
     @admin.action(description="Cancel order (releases stock)", permissions=["cancel"])
     def cancel_orders(self, request, queryset):

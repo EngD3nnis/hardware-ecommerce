@@ -109,3 +109,7 @@ Order status moves are listed in `sales.services.ORDER_TRANSITIONS` (e.g. DELIVE
 | `Payment` | Cash/bank/M-Pesa; PENDING → COMPLETED/FAILED | amount > 0; provider reference (M-Pesa receipt) unique; CheckoutRequestID unique |
 | `Refund` | Money returned, recorded by a person with `record_refund` | amount > 0; total refunds ≤ payment (service) |
 | `InboundPaymentEvent` | Every webhook stored before processing | unique (provider, event_id): duplicate deliveries are harmless |
+
+## fulfillment
+
+`Fulfillment` (one per order): PICKING → PACKED → DISPATCHED → DELIVERED, driving the order status. **Dispatch** consumes the order's reservations (SALE movements), so stock leaves the ledger exactly when goods leave the shop. Pickup orders are delivered at hand-over, which records the collector's name. Unpaid orders are held at dispatch unless the user has `fulfillment.dispatch_unpaid` (account customers); the releasing person is recorded.

@@ -108,6 +108,10 @@ Strongly recommended in production: `REDIS_CACHE_URL` (shared rate limiting acro
 - **Orders:** status changes only through actions. *Cancel* releases stock and needs the cancel permission. An order with money paid can't be cancelled until the refund is recorded.
 - **Payments:** Admin → Payments → Add, for cash/bank/paybill (a reference is required for M-Pesa/bank). STK push uses `apps.payments.services.request_mpesa_payment`, and the callback URL is `/webhooks/mpesa/<MPESA_CALLBACK_TOKEN>/`. Refunds need the *record refunds* permission.
 
+## Fulfilment
+
+Orders → *Start picking* (creates the fulfilment; print the pick list from Fulfilments) → *Mark packed* → *Dispatch / hand over* (stock leaves the ledger; pickup is complete here) → *Mark delivered*. Goods are not released unpaid unless the user has *release unpaid goods*.
+
 ## Operational endpoints
 
 | Endpoint | Purpose |
