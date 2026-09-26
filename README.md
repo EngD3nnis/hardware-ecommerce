@@ -90,6 +90,12 @@ Strongly recommended in production: `REDIS_CACHE_URL` (shared rate limiting acro
 - **Spreadsheet import (xlsx/csv):** Admin → Import batches → Add. The file is validated in the background (dry run) and the batch shows a report: rows accepted, rejected, duplicates, missing SKUs and categories, new categories, suspicious values. Someone with the *approve and import* permission then runs **Approve and import**. That applies all rows in one transaction, and **Roll back** undoes it where safe. Recognised columns are listed in `apps/catalog/imports.py`.
 - **Prices:** set on the product page ("New price"). Every change is kept as history. With no price (or with "price on request" ticked) the item is quoted individually. Public prices stay hidden until *Business profile → show prices online* is on.
 
+## Inventory & purchasing
+
+- **Stock changes:** Admin → Stock adjustments (a note is required) or Stock counts (tick "include all products" for the first count, optionally load a `sku,counted` CSV, then *Complete count*, which needs its own permission). Balances and the movement ledger are read-only.
+- **Purchasing:** Admin → Purchase orders → Submit → Approve (needs the approve permission) → Mark sent → **Receive goods**, which updates stock and the supplier's last cost.
+- **Background jobs:** run `celery -A config beat` alongside the worker. It releases expired reservations every 10 minutes and reconciles the ledger nightly.
+
 ## Operational endpoints
 
 | Endpoint | Purpose |

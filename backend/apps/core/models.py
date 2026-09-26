@@ -60,3 +60,21 @@ class BusinessProfile(models.Model):
     def get(cls) -> "BusinessProfile":
         """The profile row. It is created by a data migration, so it always exists."""
         return cls.objects.get(pk=cls.SINGLETON_ID)
+
+
+class DocumentSequence(models.Model):
+    """Gapless, per-year counters for human-facing document numbers (PO-2026-00001).
+
+    Use `apps.core.numbering.next_number()`; it locks the row so two concurrent
+    transactions can never receive the same number.
+    """
+
+    prefix = models.CharField(max_length=10)
+    year = models.PositiveSmallIntegerField()
+    last_value = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["prefix", "year"], name="document_sequence_unique")]
+
+    def __str__(self):
+        return f"{self.prefix}-{self.year}: {self.last_value}"

@@ -1,0 +1,24 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Receive goods: {{ order.number }} ({{ order.supplier }})</h1>
+<p>Deliver to <strong>{{ order.location }}</strong>. Enter what arrived now; leave a line empty if nothing came.</p>
+{% if error %}<p class="errornote">{{ error }}</p>{% endif %}
+<form method="post">{% csrf_token %}
+  <input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
+  <table>
+    <thead><tr><th>SKU</th><th>Product</th><th>Ordered</th><th>Received so far</th><th>Outstanding</th><th>Received now</th></tr></thead>
+    <tbody>
+    {% for line in lines %}
+      <tr>
+        <td>{{ line.product.sku }}</td><td>{{ line.product.name }}</td>
+        <td>{{ line.quantity.normalize }}</td><td>{{ line.received_quantity.normalize }}</td><td>{{ line.outstanding.normalize }}</td>
+        <td>{% if line.outstanding %}<input type="number" step="any" min="0" max="{{ line.outstanding }}" name="line_{{ line.pk }}" value="{{ line.outstanding.normalize }}">{% else %}complete{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p><label>Note (delivery note number etc.) <input type="text" name="note" maxlength="255" size="50"></label></p>
+  <input type="submit" class="default" value="Record receipt">
+  <a href="{% url 'admin:procurement_purchaseorder_change' order.pk %}">Cancel</a>
+</form>
+{% endblock %}

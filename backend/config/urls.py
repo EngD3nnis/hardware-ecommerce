@@ -19,6 +19,7 @@ urlpatterns = [
     path("api/v1/auth/", include("apps.authentication.urls")),
     path("api/v1/business-profile/", BusinessProfileView.as_view(), name="business-profile"),
     path("api/v1/catalog/", include("apps.catalog.urls")),
+    path("api/v1/inventory/", include("apps.inventory.urls")),
 ]
 
 if settings.DEBUG:

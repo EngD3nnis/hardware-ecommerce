@@ -64,3 +64,26 @@ Product lifecycle: `DRAFT` (hidden) → `ACTIVE` (visible, sellable) → `ARCHIV
 | `ProductPrice` | Effective-dated price of a product on a price list. The history is never edited; a new price closes the old one. | amount > 0; `valid_to > valid_from`; **no overlapping periods per product+list** (exclusion constraint, `btree_gist`) |
 
 "Price on request" is a normal state: no current price, or `Product.price_on_request = True`. Prices appear in the public API only when `BusinessProfile.show_prices_online` is on.
+
+## inventory
+
+| Model | Purpose | DB-enforced rules |
+|---|---|---|
+| `StockLocation` | Shop/store locations; "Kenol shop" seeded as default | one default |
+| `StockBalance` | on_hand, reserved, damaged per product+location; reorder point/quantity | unique per product+location; all ≥ 0; reserved ≤ on_hand |
+| `StockMovement` | Append-only ledger (reason, source, actor, idempotency key) | UPDATE/DELETE blocked by trigger; quantity ≠ 0; idempotency key unique |
+| `Reservation` | Stock held for an order (ACTIVE → RELEASED / CONSUMED, optional expiry) | quantity > 0 |
+| `StockAdjustment` | Manual human override; writes movements | quantity > 0 |
+| `StockCount`, `StockCountLine` | Stocktake; completion writes STOCKTAKE_CORRECTION movements | one line per product; counted ≥ 0 |
+
+available = on_hand − reserved; incoming = open PO quantity not yet received.
+
+## procurement
+
+| Model | Purpose | DB-enforced rules |
+|---|---|---|
+| `Supplier`, `SupplierProduct` | Suppliers; their SKU, last cost and lead time per product | supplier SKU unique per supplier; one preferred supplier per product |
+| `PurchaseOrder`, `PurchaseOrderLine` | DRAFT → PENDING_APPROVAL → APPROVED → SENT → (PARTIALLY_)RECEIVED / CANCELLED | quantity > 0; 0 ≤ received ≤ ordered |
+| `GoodsReceipt`, `GoodsReceiptLine` | What arrived; drives PURCHASE_RECEIVED movements | idempotency key unique |
+
+Approval policy: `PURCHASE_AUTO_APPROVE_LIMIT` (default 0, so every order is approved explicitly) and `PURCHASE_APPROVER_MUST_DIFFER`. Agents can draft and submit, never approve, send or receive.

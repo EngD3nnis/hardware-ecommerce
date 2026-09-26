@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     "apps.authentication",
     "apps.catalog",
     "apps.pricing",
+    "apps.inventory",
+    "apps.procurement",
 ]
 
 MIDDLEWARE = [
@@ -223,6 +225,25 @@ CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_TASK_SOFT_TIME_LIMIT = 5 * 60
 CELERY_TASK_TIME_LIMIT = 6 * 60
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+# Periodic jobs (run `celery -A config beat`). Each task is idempotent.
+CELERY_BEAT_SCHEDULE = {
+    "release-expired-reservations": {
+        "task": "apps.inventory.tasks.release_expired_reservations",
+        "schedule": timedelta(minutes=10),
+    },
+    "reconcile-inventory": {
+        "task": "apps.inventory.tasks.reconcile_inventory",
+        "schedule": timedelta(hours=24),
+    },
+}
+
+# --- Business rules (configurable without code changes) ------------------------
+
+# Purchase orders at or below this total (KES) are approved on submission when
+# the submitter can approve. 0 = every purchase order needs explicit approval.
+PURCHASE_AUTO_APPROVE_LIMIT = env.int("PURCHASE_AUTO_APPROVE_LIMIT", default=0)
+# Separation of duties: the approver must not be the person who created the order.
+PURCHASE_APPROVER_MUST_DIFFER = env.bool("PURCHASE_APPROVER_MUST_DIFFER", default=False)
 
 # --- Object storage (S3-compatible, e.g. Cloudflare R2) ----------------------
 # Wired up with django-storages in Stage 2.
