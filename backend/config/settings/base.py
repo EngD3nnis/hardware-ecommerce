@@ -10,6 +10,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import environ
+from celery.schedules import crontab
 from django.core.exceptions import ImproperlyConfigured
 
 # backend/
@@ -222,7 +223,7 @@ CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://localhost:
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = TIME_ZONE
+CELERY_TIMEZONE = BUSINESS_TIMEZONE  # crontab times below are Nairobi time
 CELERY_RESULT_EXPIRES = timedelta(days=1)
 CELERY_TASK_TRACK_STARTED = True
 # Acknowledge only after the task finishes, and re-queue if the worker dies,
@@ -246,8 +247,25 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": timedelta(minutes=15),
     },
     "reconcile-inventory": {
-        "task": "apps.inventory.tasks.reconcile_inventory",
+        "task": "apps.automation.tasks.reconcile_inventory",
         "schedule": timedelta(hours=24),
+    },
+    "operational-checks": {"task": "apps.automation.tasks.run_operational_checks", "schedule": timedelta(minutes=30)},
+    # Agents: skipped at no cost unless enabled in /ops/.
+    "agent-inventory-daily": {
+        "task": "apps.ai.tasks.run_scheduled_agent",
+        "schedule": crontab(hour=6, minute=0),
+        "args": ("inventory",),
+    },
+    "agent-operations-daily": {
+        "task": "apps.ai.tasks.run_scheduled_agent",
+        "schedule": crontab(hour=18, minute=30),
+        "args": ("operations",),
+    },
+    "agent-catalogue-weekly": {
+        "task": "apps.ai.tasks.run_scheduled_agent",
+        "schedule": crontab(hour=7, minute=0, day_of_week="mon"),
+        "args": ("catalogue",),
     },
 }
 

@@ -5,6 +5,7 @@ import json
 import logging
 
 from django.conf import settings
+from django.db import transaction
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
@@ -30,5 +31,11 @@ def whatsapp_webhook(request):
         payload = json.loads(request.body)
     except ValueError:
         return JsonResponse({"error": "invalid json"}, status=400)
-    services.store_whatsapp_webhook(payload)
+    stored = services.store_whatsapp_webhook(payload)
+    if stored:
+        # Hand new messages to the sales agent (a no-op unless it is enabled). Lazy import: ai depends on notifications.
+        from apps.ai.tasks import handle_inbound_message
+
+        ids = [m.pk for m in stored]
+        transaction.on_commit(lambda: [handle_inbound_message.delay(i) for i in ids])
     return JsonResponse({"status": "ok"})

@@ -30,10 +30,16 @@ The services add their own agent guards on top: agents cannot set quote prices, 
 
 | Agent | Max tier | Tools | Trigger |
 |---|---|---|---|
-| sales | MEDIUM | search, product, availability band, price, customer, draft quote, reply, escalate | inbound WhatsApp (Stage 9) |
-| inventory | HIGH (approval only) | low/dead stock, velocity, supplier options, draft PO, alert, task, request stock adjustment | daily beat |
-| catalogue | MEDIUM | catalogue issues, product, search, propose change, task | weekly beat / on demand |
-| operations | MEDIUM | operations snapshot, low stock, alert, task, velocity | beat |
+| sales | MEDIUM | search, product, availability band, price, customer, draft quote, reply, escalate | each new inbound WhatsApp message (once per message, with recent conversation as context) |
+| inventory | HIGH (approval only) | low/dead stock, velocity, supplier options, draft PO, alert, task, request stock adjustment | daily 06:00 |
+| catalogue | MEDIUM | catalogue issues, product, search, propose change, task | Mondays 07:00 |
+| operations | MEDIUM | operations snapshot, low stock, alert, task, velocity | daily 18:30 (summary) |
+
+Times are Nairobi time (Celery beat). A disabled agent's trigger returns immediately and costs nothing.
+
+## Deterministic checks (no AI)
+
+`apps/automation/checks.py` runs every 30 minutes, and the ledger reconciliation runs nightly, whether or not any agent is on. They raise deduplicated incidents for stuck orders, failed customer messages, failed payment callbacks (critical), M-Pesa requests pending over an hour, WhatsApp messages unanswered for 30+ minutes, and inventory ledger mismatches (critical). They also expire old approval requests. The operations agent only *summarises and prioritises* these facts.
 
 ## Failure behaviour
 
