@@ -118,6 +118,10 @@ Orders → *Start picking* (creates the fulfilment; print the pick list from Ful
 - Until the WhatsApp Cloud API is set up (`NOTIFY_WHATSAPP_BACKEND=whatsapp_cloud` plus `WHATSAPP_*` settings), messages are only logged (`console`). Staff can still send a sent quotation from their own phone with the quotation's **Open WhatsApp** button.
 - Incoming WhatsApp messages (webhook `/webhooks/whatsapp/`, signature-verified) appear in Admin → Inbound messages.
 
+## AI agents & automation
+
+Optional and **off by default**. See [docs/architecture/ai-agents.md](docs/architecture/ai-agents.md). The control centre at **`/ops/`** (staff) shows agent status, cost and runs, and has the **DISABLE ALL AUTOMATIONS** button. Agents act only through typed tools. Anything consequential becomes an approval request (Admin → Approval requests) that a person approves and executes. Set `AUTOMATION_HARD_DISABLE=1` to force everything off regardless of the database.
+
 ## Operational endpoints
 
 | Endpoint | Purpose |

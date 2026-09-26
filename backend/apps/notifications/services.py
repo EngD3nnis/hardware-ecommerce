@@ -64,10 +64,10 @@ def render(template: str, obj) -> str:
 # --- Outbound -------------------------------------------------------------------------------------
 
 
-def _recipient(customer: Customer, channel: str) -> str | None:
+def _recipient(customer: Customer, channel: str, customer_initiated: bool = False) -> str | None:
     if channel == ChannelType.EMAIL:
         return customer.email or None
-    if channel == ChannelType.WHATSAPP and not customer.whatsapp_opt_in:
+    if channel == ChannelType.WHATSAPP and not (customer.whatsapp_opt_in or customer_initiated):
         return None  # business-initiated WhatsApp needs the customer's consent
     return customer.phone
 
@@ -81,9 +81,13 @@ def queue(
     related=None,
     actor: Actor,
     idempotency_key: str | None = None,
+    customer_initiated: bool = False,
 ) -> OutboundMessage | None:
-    """Store a message and send it after commit. Returns None if the customer can't receive on this channel."""
-    to = _recipient(customer, channel)
+    """Store a message and send it after commit. Returns None if the customer can't receive on this channel.
+
+    customer_initiated: replying to a message the customer just sent (allowed without opt-in).
+    """
+    to = _recipient(customer, channel, customer_initiated)
     if not to:
         return None
     if idempotency_key and (existing := OutboundMessage.objects.filter(idempotency_key=idempotency_key).first()):

@@ -62,6 +62,8 @@ INSTALLED_APPS = [
     "apps.search",
     "apps.fulfillment",
     "apps.notifications",
+    "apps.automation",
+    "apps.ai",
 ]
 
 MIDDLEWARE = [
@@ -303,8 +305,20 @@ AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "public, max-age=31536000, immutable
 if AWS_STORAGE_BUCKET_NAME:
     STORAGES["default"] = {"BACKEND": "storages.backends.s3.S3Storage"}
 
-# --- AI providers -----------------------------------------------------------
-# Read only by the AI provider layer (Stage 8). Business code never uses these.
+# --- AI & automation (ADR 0004, 0011) ------------------------------------------
+# Hard off-switch for every agent and automated tool call, independent of the
+# database (use if the admin switch can't be reached). The core app ignores it.
+AUTOMATION_HARD_DISABLE = env.bool("AUTOMATION_HARD_DISABLE", default=False)
+# Anthropic server-side refusal fallbacks (the API retries a declined request on a fallback model).
+AI_REFUSAL_FALLBACKS = env.bool("AI_REFUSAL_FALLBACKS", default=True)
+# USD per 1M tokens (input, output), for cost estimates in the control centre.
+AI_MODEL_PRICES = {
+    "claude-opus-5": (5.00, 25.00),
+    "claude-opus-5-5": (4.00, 20.00),
+    "claude-sonnet-5": (2.00, 10.00),
+    "claude-haiku-4-5": (1.00, 5.00),
+}
+# Provider credentials. Only apps/ai/providers/ reads these.
 
 ACTIVE_AI_PROVIDER = env("ACTIVE_AI_PROVIDER", default="")
 OPENAI_API_KEY = env("OPENAI_API_KEY", default="")

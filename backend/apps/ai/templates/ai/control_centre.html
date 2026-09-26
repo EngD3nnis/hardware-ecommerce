@@ -1,0 +1,43 @@
+{% extends "admin/base_site.html" %}
+{% block title %}Automation control centre{% endblock %}
+{% block content %}
+<h1>Automation control centre</h1>
+<p>Everything here is optional: with automations off, the shop runs normally through the admin.</p>
+
+<div class="module" style="padding:12px;{% if hard_disabled %}background:#fde2e2{% else %}background:#e2f5e6{% endif %}">
+  <h2>{% if hard_disabled %}Automations are OFF{% else %}Automations are ON{% endif %}</h2>
+  {% if switch and switch.all_disabled %}<p>Turned off by {{ switch.changed_by }} at {{ switch.changed_at }}: {{ switch.reason }}</p>{% endif %}
+  {% if can_control %}
+  <form method="post" action="{% url 'ops-toggle-all' %}">{% csrf_token %}
+    {% if hard_disabled %}<input type="hidden" name="disable" value="0"><input type="submit" value="Enable automations">
+    {% else %}<input type="hidden" name="disable" value="1"><input type="text" name="reason" placeholder="Reason" size="40">
+      <input type="submit" value="DISABLE ALL AUTOMATIONS" style="background:#ba2121;color:#fff">{% endif %}
+  </form>
+  {% endif %}
+</div>
+
+<h2>Agents</h2>
+<table><thead><tr><th>Agent</th><th>Purpose</th><th>State</th><th>Model</th><th>Runs today</th><th>Cost today (USD)</th><th>Tokens in/out</th><th>Last run</th><th></th></tr></thead><tbody>
+{% for a in agents %}<tr>
+  <td><strong>{{ a.name }}</strong><br><small>max tier {{ a.max_tier }}</small></td><td>{{ a.purpose }}</td>
+  <td>{% if a.config.enabled %}enabled{% else %}disabled{% endif %}</td><td>{{ a.config.model }} ({{ a.config.effort }})</td>
+  <td>{{ a.today.runs|default:0 }}</td><td>{{ a.today.cost|default:0|floatformat:4 }} / {{ a.config.daily_budget_usd }}</td>
+  <td>{{ a.today.tokens_in|default:0 }} / {{ a.today.tokens_out|default:0 }}</td>
+  <td>{% if a.last %}{{ a.last.created_at|date:"d M H:i" }} {{ a.last.status }}{% else %}never{% endif %}</td>
+  <td>{% if can_control %}<form method="post" action="{% url 'ops-toggle-agent' a.name %}">{% csrf_token %}<input type="submit" value="{% if a.config.enabled %}Disable{% else %}Enable{% endif %}"></form>{% endif %}</td>
+</tr>{% endfor %}</tbody></table>
+
+<h2>Waiting for approval ({{ approvals|length }})</h2>
+<ul>{% for r in approvals %}<li><a href="{% url 'admin:automation_approvalrequest_change' r.pk %}">{{ r.summary }}</a> by {{ r.requested_by }}, {{ r.created_at|timesince }} ago</li>{% empty %}<li>Nothing waiting.</li>{% endfor %}</ul>
+
+<h2>Open incidents ({{ incidents|length }})</h2>
+<ul>{% for i in incidents %}<li><a href="{% url 'admin:automation_incident_change' i.pk %}">[{{ i.severity }}] {{ i.title }}</a> ×{{ i.occurrences }}, last {{ i.last_seen_at|timesince }} ago</li>{% empty %}<li>None.</li>{% endfor %}</ul>
+
+<h2>Open tasks ({{ tasks|length }})</h2>
+<ul>{% for t in tasks %}<li><a href="{% url 'admin:automation_internaltask_change' t.pk %}">{{ t.title }}</a> ({{ t.created_by }})</li>{% empty %}<li>None.</li>{% endfor %}</ul>
+
+<h2>Recent runs</h2>
+<table><thead><tr><th>When</th><th>Agent</th><th>Status</th><th>Trigger</th><th>Steps</th><th>Cost</th><th>Error</th></tr></thead><tbody>
+{% for r in recent_runs %}<tr><td><a href="{% url 'admin:ai_agentrun_change' r.pk %}">{{ r.created_at|date:"d M H:i" }}</a></td><td>{{ r.agent }}</td><td>{{ r.status }}</td><td>{{ r.trigger }}</td><td>{{ r.steps }}</td><td>{{ r.estimated_cost_usd|floatformat:4 }}</td><td>{{ r.error|truncatechars:80 }}</td></tr>{% empty %}<tr><td colspan="7">No runs yet.</td></tr>{% endfor %}
+</tbody></table>
+{% endblock %}

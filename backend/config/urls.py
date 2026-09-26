@@ -12,6 +12,7 @@ from apps.sales.api import QuoteRequestView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("ops/", include("apps.ai.urls")),
     # Operations
     path("health/live", core_views.health_live, name="health-live"),
     path("health/ready", core_views.health_ready, name="health-ready"),
