@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.postgres",
+    "django.contrib.humanize",
     # Third-party
     "corsheaders",
     "rest_framework",
@@ -65,6 +66,7 @@ INSTALLED_APPS = [
     "apps.notifications",
     "apps.automation",
     "apps.ai",
+    "apps.analytics",
 ]
 
 MIDDLEWARE = [
@@ -172,7 +174,12 @@ else:
 # --- Django REST Framework --------------------------------------------------
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
+    # JWT for API clients; sessions so logged-in staff can use staff endpoints from the browser
+    # (DRF enforces CSRF on session-authenticated writes).
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_FILTER_BACKENDS": (
         "django_filters.rest_framework.DjangoFilterBackend",
@@ -249,6 +256,10 @@ CELERY_BEAT_SCHEDULE = {
     "reconcile-inventory": {
         "task": "apps.automation.tasks.reconcile_inventory",
         "schedule": timedelta(hours=24),
+    },
+    "analytics-daily-snapshots": {
+        "task": "apps.analytics.tasks.refresh_daily_snapshots",
+        "schedule": crontab(minute=5),  # hourly; recomputes the last 3 days
     },
     "operational-checks": {"task": "apps.automation.tasks.run_operational_checks", "schedule": timedelta(minutes=30)},
     # Agents: skipped at no cost unless enabled in /ops/.

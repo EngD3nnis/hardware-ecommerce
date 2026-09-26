@@ -122,3 +122,9 @@ Order status moves are listed in `sales.services.ORDER_TRANSITIONS` (e.g. DELIVE
 | `InboundMessage` | Customer messages received via the WhatsApp webhook (signature verified), stored before anything reads them | provider message id unique (redeliveries ignored) |
 
 `notify()` is called from the sales/payments/fulfilment services. It never raises, so a messaging problem cannot undo a sale. Business-initiated WhatsApp messages require `Customer.whatsapp_opt_in`. Channel adapters (console, WhatsApp Cloud, email, disabled) are chosen by `NOTIFICATION_BACKENDS`.
+
+## automation, ai, analytics
+
+- `AutomationSwitch` (singleton kill switch), `ApprovalRequest` (proposed and final values, decided by, executed result), `Incident` (deduplicated by fingerprint while unresolved), `InternalTask`.
+- `AgentConfig` (per-agent switch, model, effort, limits, budget), `AgentRun`, `ModelCall` (tokens, latency, cost), `ToolCall` (input, output, status).
+- `DailySalesSnapshot`: one row per Nairobi business day, recomputed idempotently.
