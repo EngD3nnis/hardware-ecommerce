@@ -1,6 +1,6 @@
 # Local development services only: PostgreSQL and Redis.
 # Django, Celery and the static site run on the host (see README.md).
-# Production deployment is documented separately (docs/operations/deployment.md, Stage 1+).
+# Not a production setup; see "Configuration" in README.md for production requirements.
 #
 #   docker compose up -d
 #

@@ -221,3 +221,28 @@ Customers (non-login), brands, variants, attributes, aliases, suppliers, procure
 | L1 | Static site unescaped HTML (S2), which rises to HIGH before the site consumes API data | LOW | 5/7 |
 | L2 | Quote basket not persisted | LOW | 5 |
 | L3 | No business timezone | LOW | 1 |
+
+---
+
+## 7. Status after Stage 1 (2026-09-26, branch `stage-1-stabilize`)
+
+Sections 1–6 above are the original audit snapshot and are left unchanged. This table records what Stage 1 did about each issue.
+
+| ID | Resolution |
+|---|---|
+| C1 | **Fixed.** wsgi/asgi/Celery default to production settings; only `manage.py` defaults to local. [ADR 0005](../adr/0005-fail-closed-configuration.md). |
+| C2 | **Fixed.** No secret fallback outside local/test. Production requires strong `DJANGO_SECRET_KEY` + a *different* `JWT_SIGNING_KEY`. |
+| C3 | **Fixed.** Every app has a `migrations/` package and an initial migration of the current scaffold. No production database exists yet, so Stage 2 may replace these initial migrations while redesigning the models, but only until the first deploy. |
+| H1 | **Fixed.** `token_blacklist` installed; `/api/v1/auth/token/blacklist/` added for logout; refresh-token reuse after rotation is rejected (tested). |
+| H2 | **Partly fixed.** Every direct dependency is pinned exactly (`requirements.txt`, `requirements-dev.txt`). Transitive dependencies are not yet locked; a hashed lockfile is a follow-up. All original packages are kept, including the unused AI SDKs, `boto3` and `openpyxl`, for their later stages. |
+| H3 | **Fixed.** Celery app moved to `config/celery.py`; `celery -A config worker` works from `backend/`. |
+| M1 | **Fixed.** `/metrics` needs `Authorization: Bearer $METRICS_TOKEN`; 404 when unset outside DEBUG. |
+| M2 | **Fixed.** Sentry `send_default_pii=False`. |
+| M3 | **Fixed.** JSON logging, `X-Request-ID` middleware, correlation id propagated into Celery tasks. |
+| M4 | **Fixed.** No SQLite fallback; dev/test/CI use PostgreSQL 16. |
+| M5 | **Fixed.** Login/refresh/logout throttled (`THROTTLE_RATE_AUTH`, default 10/min per IP). |
+| M6 | **Fixed.** Product id 0 now opens from bulk quote links; empty/garbage id parts still ignored. |
+| L3 | **Fixed.** `BUSINESS_TIMEZONE = "Africa/Nairobi"`. |
+| H4, H5, M7, L1, L2 | Unchanged; planned for Stages 2–5 as listed in §6. |
+
+Also added: `apps.common` renamed to `apps.core`; a consistent API error envelope with a `DomainError` hierarchy; `/health/live` and `/health/ready`; User admin (email login); pytest suite on PostgreSQL; ruff; GitHub Actions CI; `docker-compose.yml` (dev services); `.env.example` (and `.env` added to `.gitignore`); root README; ADRs 0001–0005.

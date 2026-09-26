@@ -49,7 +49,7 @@ Modular monolith. One Django project, apps by business domain, each with the sam
 
 ```
 backend/
-  config/                 settings/{base,dev,test,production}.py, urls.py, celery.py (moved in)
+  config/                 settings/{base,local,test,production}.py, urls.py, celery.py
   apps/
     core/          # (renamed from common) base models, exceptions, idempotency, request-id middleware, money utils
     accounts/      # staff/admin User (email login), roles/groups
