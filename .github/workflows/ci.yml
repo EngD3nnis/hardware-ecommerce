@@ -51,6 +51,11 @@ jobs:
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
 
+      - name: OpenAPI schema is valid
+        run: python manage.py spectacular --validate --fail-on-warn --file /tmp/schema.yml
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+
       - name: Production deploy checks
         run: python manage.py check --deploy --fail-level WARNING
         env:

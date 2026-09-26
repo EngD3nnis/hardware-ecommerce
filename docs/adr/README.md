@@ -13,3 +13,5 @@ Short records of significant decisions: the context, what was decided, and the c
 | [0003](0003-celery-and-redis-for-background-work.md) | Celery + Redis for background work; business transactions are not in tasks | Accepted |
 | [0004](0004-ai-as-tool-based-orchestration-layer.md) | AI is an optional orchestration layer that acts only through audited tools | Accepted |
 | [0005](0005-fail-closed-configuration.md) | Configuration fails closed in production | Accepted |
+| [0006](0006-catalogue-model.md) | Catalogue: Product is the SKU, typed attributes, content-addressed images | Accepted |
+| [0007](0007-audit-log-append-only.md) | Audit log written by services, append-only in the database | Accepted |

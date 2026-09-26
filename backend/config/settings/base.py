@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
     # Third-party
     "corsheaders",
     "rest_framework",
@@ -46,15 +47,13 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "django_filters",
     "django_prometheus",
+    "drf_spectacular",
     # Dewmix
     "apps.core",
+    "apps.audit",
     "apps.authentication",
     "apps.catalog",
-    "apps.inventory",
-    "apps.orders",
-    "apps.payments",
-    "apps.communications",
-    "apps.ai_service",
+    "apps.pricing",
 ]
 
 MIDDLEWARE = [
@@ -138,6 +137,13 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Product images and documents. Local disk by default; S3-compatible object
+# storage (e.g. Cloudflare R2) when a bucket is configured.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
+
 # --- Cache ------------------------------------------------------------------
 
 # Used by API throttling. Redis when configured; per-process memory otherwise.
@@ -162,13 +168,23 @@ REST_FRAMEWORK = {
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
     ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 50,
     "EXCEPTION_HANDLER": "apps.core.exceptions.api_exception_handler",
     # Scoped throttles are opted into per view with `throttle_scope`.
     "DEFAULT_THROTTLE_RATES": {
         "auth": env("THROTTLE_RATE_AUTH", default="10/min"),
+        "public": env("THROTTLE_RATE_PUBLIC", default="120/min"),
     },
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Dewmix Platform API",
+    "DESCRIPTION": "Catalogue, quotations, orders and operations API. Errors use the envelope described in README.md.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SCHEMA_PATH_PREFIX": r"/api/v1",
 }
 
 SIMPLE_JWT = {
@@ -215,7 +231,14 @@ AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID", default="")
 AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY", default="")
 AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME", default="")
 AWS_S3_ENDPOINT_URL = env("AWS_S3_ENDPOINT_URL", default="")
-AWS_S3_CUSTOM_DOMAIN = env("AWS_S3_CUSTOM_DOMAIN", default="")
+AWS_S3_CUSTOM_DOMAIN = env("AWS_S3_CUSTOM_DOMAIN", default="") or None
+AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME", default="auto")  # "auto" for Cloudflare R2
+AWS_DEFAULT_ACL = None  # bucket policy decides; never make objects public-writable
+AWS_QUERYSTRING_AUTH = env.bool("AWS_QUERYSTRING_AUTH", default=False)  # public product images
+AWS_S3_FILE_OVERWRITE = False
+AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "public, max-age=31536000, immutable"}  # content-addressed
+if AWS_STORAGE_BUCKET_NAME:
+    STORAGES["default"] = {"BACKEND": "storages.backends.s3.S3Storage"}
 
 # --- AI providers -----------------------------------------------------------
 # Read only by the AI provider layer (Stage 8). Business code never uses these.

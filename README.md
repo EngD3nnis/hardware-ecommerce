@@ -34,6 +34,7 @@ cp .env.example .env
 cd backend
 ../.venv/bin/python manage.py migrate
 ../.venv/bin/python manage.py createsuperuser   # asks for email + password
+../.venv/bin/python manage.py import_legacy_catalog   # 1,160 products + images from dewmix_source/ (~2 min, safe to re-run)
 
 # 5. Run
 ../.venv/bin/python manage.py runserver         # http://127.0.0.1:8000/admin/
@@ -83,6 +84,12 @@ Production requires (the app **will not start** otherwise; see [ADR 0005](docs/a
 
 Strongly recommended in production: `REDIS_CACHE_URL` (shared rate limiting across Gunicorn workers), `CELERY_BROKER_URL`, `SENTRY_DSN`, `METRICS_TOKEN`, `LOG_FORMAT=json` (the default).
 
+## Catalogue
+
+- **Legacy website import:** `manage.py import_legacy_catalog [--dry-run] [--skip-images] [--json]`. Idempotent and non-destructive. It never overwrites a product that exists in the database, and reports differences instead. Data problems it finds (duplicate names or photos, truncated names, SEO words in names, catch-all subcategories) go to **Admin → Catalog review items**. Brand suggestions go to **Catalog change proposals** for approval.
+- **Spreadsheet import (xlsx/csv):** Admin → Import batches → Add. The file is validated in the background (dry run) and the batch shows a report: rows accepted, rejected, duplicates, missing SKUs and categories, new categories, suspicious values. Someone with the *approve and import* permission then runs **Approve and import**. That applies all rows in one transaction, and **Roll back** undoes it where safe. Recognised columns are listed in `apps/catalog/imports.py`.
+- **Prices:** set on the product page ("New price"). Every change is kept as history. With no price (or with "price on request" ticked) the item is quoted individually. Public prices stay hidden until *Business profile → show prices online* is on.
+
 ## Operational endpoints
 
 | Endpoint | Purpose |
@@ -91,6 +98,17 @@ Strongly recommended in production: `REDIS_CACHE_URL` (shared rate limiting acro
 | `GET /health/ready` | Database and Redis broker reachable → 200, otherwise 503. For load balancers. |
 | `GET /metrics` | Prometheus metrics. Requires `Authorization: Bearer $METRICS_TOKEN`; disabled if the token is unset. |
 | `/admin/` | Django admin (staff only). |
+
+## Public API (no login)
+
+| Endpoint | |
+|---|---|
+| `GET /api/v1/catalog/products/?q=&category=&brand=` | Active products (paginated: `limit`, `offset`) |
+| `GET /api/v1/catalog/products/{sku-or-code}/` | One product by SKU, alternative SKU or barcode |
+| `GET /api/v1/catalog/products/legacy/?ids=0,12,45` | Products by old website id, in the order given (old quote links) |
+| `GET /api/v1/catalog/categories/`, `/brands/` | Navigation |
+| `GET /api/v1/business-profile/` | Contact details, WhatsApp number, opening hours |
+| `GET /api/v1/docs/` | API documentation (OpenAPI schema at `/api/v1/schema/`) |
 
 ## API conventions
 
@@ -108,11 +126,15 @@ Strongly recommended in production: `REDIS_CACHE_URL` (shared rate limiting acro
 backend/
   config/            settings/, urls.py, celery.py, wsgi.py, asgi.py
   apps/
-    core/            shared base models, exceptions + API error handler, request-id middleware,
-                     JSON logging, health/metrics views
+    core/            base models, Actor, BusinessProfile, exceptions + API error handler,
+                     request-id middleware, JSON logging, health/metrics views
+    audit/           append-only AuditEvent + record()
     authentication/  staff User (email login), JWT endpoints
-    catalog/ inventory/ orders/ payments/ communications/ ai_service/
-                     scaffold models from the initial commit, redesigned in Stages 2–8
+    catalog/         products, categories, brands, attributes, media, review queue,
+                     proposals, legacy + spreadsheet importers, public API
+    pricing/         price lists and effective-dated prices
 ```
+
+The data model is described in [docs/architecture/data-model.md](docs/architecture/data-model.md), and security controls in [docs/architecture/security.md](docs/architecture/security.md).
 
 Business rules go in services (`apps/<domain>/services.py`), not in views, serializers, admin, Celery tasks or AI prompts. See target-state §2.

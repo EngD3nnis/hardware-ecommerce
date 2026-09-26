@@ -26,3 +26,7 @@ sentry-sdk==2.70.0
 prometheus-client==0.26.0
 django-prometheus==2.5.0
 openpyxl==3.1.5
+# Added in Stage 2
+pillow==12.3.0                       # image validation for product media
+django-storages==1.14.6              # S3-compatible object storage (e.g. Cloudflare R2)
+drf-spectacular==0.30.0              # OpenAPI schema at /api/v1/schema/

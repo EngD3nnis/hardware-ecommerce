@@ -77,6 +77,12 @@ Per-app convention: `models.py`, `services.py` (write operations), `selectors.py
 
 ---
 
+### Deviations decided during implementation
+
+- The login app stays named `authentication` (not `accounts`), because renaming the app that owns `AUTH_USER_MODEL` is costly for no benefit.
+- The scaffold apps `inventory`, `orders`, `payments`, `communications` and `ai_service` were removed in Stage 2. Their models were superseded by the designs below, and their FKs pointed at the old `Product`. Each domain returns as a redesigned app in its own stage, before any production database exists.
+- `audit` was built in Stage 2 rather than Stage 4 ([ADR 0007](../adr/0007-audit-log-append-only.md)).
+
 ## 3. Domain designs
 
 ### 3.1 Catalogue

@@ -1,8 +1,8 @@
-"""Per-request / per-task correlation id.
+"""Per-request / per-task context: correlation id and client metadata.
 
-One id follows a unit of work (an HTTP request, and any Celery tasks it
-enqueues) through logs, audit events and error reports, so a failure can be
-traced end to end.
+One correlation id follows a unit of work (an HTTP request, and any Celery
+tasks it enqueues) through logs, audit events and error reports, so a failure
+can be traced end to end.
 
 Deliberately free of Django imports: config/celery.py imports it before
 Django is set up.
@@ -11,6 +11,7 @@ Django is set up.
 import re
 import uuid
 from contextvars import ContextVar
+from dataclasses import dataclass
 
 # Name of the Celery message header that carries the id between processes.
 CORRELATION_HEADER = "correlation_id"
@@ -36,3 +37,22 @@ def get_correlation_id() -> str | None:
 
 def set_correlation_id(value: str | None) -> None:
     _correlation_id.set(value)
+
+
+@dataclass(frozen=True)
+class ClientMeta:
+    """Where the current request came from (recorded on audit events)."""
+
+    ip: str | None = None
+    user_agent: str = ""
+
+
+_client_meta: ContextVar[ClientMeta | None] = ContextVar("client_meta", default=None)
+
+
+def get_client_meta() -> ClientMeta:
+    return _client_meta.get() or ClientMeta()
+
+
+def set_client_meta(value: ClientMeta | None) -> None:
+    _client_meta.set(value)

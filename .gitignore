@@ -105,3 +105,7 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Uploaded/imported media and collected static files (local development)
+backend/media/
+backend/staticfiles/
