@@ -2154,7 +2154,8 @@ document.addEventListener('keydown', e => {
   const params = new URLSearchParams(window.location.search);
   const ids_param = params.get('products');
   if (ids_param) {
-    const ids = ids_param.split(',').map(Number).filter(n => !isNaN(n) && n > 0);
+    // Whole-number ids only; 0 is a real product (DWX-0000), empty parts are not.
+    const ids = ids_param.split(',').map(s => s.trim()).filter(s => /^\d+$/.test(s)).map(Number);
     function tryMulti(attempt) {
       if (typeof openProduct === 'function') {
         if (ids.length === 1) {
