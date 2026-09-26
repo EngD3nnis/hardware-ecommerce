@@ -1,6 +1,8 @@
-from django.db import models
 from django.conf import settings
-from apps.common.models import TimeStampedModel
+from django.db import models
+
+from apps.core.models import TimeStampedModel
+
 
 class AIInteractionLog(TimeStampedModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)

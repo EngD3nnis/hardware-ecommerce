@@ -1,26 +1,28 @@
 from django.db import models
-from apps.common.models import TimeStampedModel
+
+from apps.core.models import TimeStampedModel
 from apps.orders.models import Order
+
 
 class PaymentTransaction(TimeStampedModel):
     METHOD_CHOICES = (
-        ('M-Pesa', 'M-Pesa'),
-        ('Card', 'Card'),
-        ('Bank Transfer', 'Bank Transfer'),
+        ("M-Pesa", "M-Pesa"),
+        ("Card", "Card"),
+        ("Bank Transfer", "Bank Transfer"),
     )
 
     STATUS_CHOICES = (
-        ('Pending', 'Pending'),
-        ('Completed', 'Completed'),
-        ('Failed', 'Failed'),
-        ('Refunded', 'Refunded'),
+        ("Pending", "Pending"),
+        ("Completed", "Completed"),
+        ("Failed", "Failed"),
+        ("Refunded", "Refunded"),
     )
 
-    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name='payments')
+    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name="payments")
     method = models.CharField(max_length=50, choices=METHOD_CHOICES)
     reference_id = models.CharField(max_length=255, unique=True)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default="Pending")
     raw_response = models.JSONField(null=True, blank=True)
 
     def __str__(self):

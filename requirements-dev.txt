@@ -1,0 +1,8 @@
+# Development and CI tooling (install after requirements.txt).
+-r requirements.txt
+pytest==8.4.2
+pytest-django==4.14.0
+pytest-cov==6.3.0
+factory-boy==3.3.3
+hypothesis==6.168.1
+ruff==0.16.9

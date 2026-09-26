@@ -1,19 +1,23 @@
-from django.db import models
 from django.conf import settings
-from apps.common.models import TimeStampedModel
+from django.db import models
+
 from apps.catalog.models import Product
+from apps.core.models import TimeStampedModel
+
 
 class Order(TimeStampedModel):
     STATUS_CHOICES = (
-        ('Pending', 'Pending'),
-        ('Paid', 'Paid'),
-        ('Shipped', 'Shipped'),
-        ('Cancelled', 'Cancelled'),
-        ('Returned', 'Returned'),
+        ("Pending", "Pending"),
+        ("Paid", "Paid"),
+        ("Shipped", "Shipped"),
+        ("Cancelled", "Cancelled"),
+        ("Returned", "Returned"),
     )
 
-    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
+    customer = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="orders"
+    )
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default="Pending")
     total_amount = models.DecimalField(max_digits=12, decimal_places=2)
     shipping_address = models.TextField()
     phone_number = models.CharField(max_length=50)
@@ -24,8 +28,8 @@ class Order(TimeStampedModel):
 
 
 class OrderItem(TimeStampedModel):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='order_items')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="order_items")
     quantity = models.IntegerField()
     price = models.DecimalField(max_digits=12, decimal_places=2)
 
@@ -34,7 +38,7 @@ class OrderItem(TimeStampedModel):
 
 
 class Invoice(TimeStampedModel):
-    order = models.OneToOneField(Order, on_delete=models.PROTECT, related_name='invoice')
+    order = models.OneToOneField(Order, on_delete=models.PROTECT, related_name="invoice")
     invoice_number = models.CharField(max_length=100, unique=True)
     pdf_url = models.URLField(max_length=500, blank=True)
 
