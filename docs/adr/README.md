@@ -17,3 +17,4 @@ Short records of significant decisions: the context, what was decided, and the c
 | [0007](0007-audit-log-append-only.md) | Audit log written by services, append-only in the database | Accepted |
 | [0008](0008-inventory-ledger.md) | Inventory: append-only ledger with locked balances | Accepted |
 | [0009](0009-quotes-orders-payments.md) | Quotes→orders, separate order/payment status, store-first webhooks | Accepted |
+| [0010](0010-postgres-search.md) | Product search on PostgreSQL (FTS + trigram + synonyms) | Accepted |

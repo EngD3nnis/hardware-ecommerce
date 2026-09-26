@@ -96,6 +96,12 @@ Strongly recommended in production: `REDIS_CACHE_URL` (shared rate limiting acro
 - **Purchasing:** Admin → Purchase orders → Submit → Approve (needs the approve permission) → Mark sent → **Receive goods**, which updates stock and the supplier's last cost.
 - **Background jobs:** run `celery -A config beat` alongside the worker. It releases expired reservations every 10 minutes and reconciles the ledger nightly.
 
+## Website sync & search
+
+- `manage.py export_static_catalog [--write]` regenerates the `CATALOG` data in `dewmix_source/index.html` and `products.html` from the database, so the static site shows the database's products. Without `--write` it only reports. Active products without a website id (new products) are listed; they need a photo and an id before they can appear on the old site.
+- Search (`?q=` on the products API) handles SKUs, old ids, typos, aliases and synonyms. Add synonyms under Admin → Synonyms.
+- The static site now HTML-escapes product text before inserting it into pages. It still reads its own embedded data until the site is switched to the API.
+
 ## Sales & payments
 
 - **Quotations:** Admin → Quotations. Add the customer and products; list prices fill in automatically, and price-on-request lines are priced by hand. Then *Mark as sent* → *Customer accepted* → *Convert to order*, which reserves stock.
@@ -119,6 +125,7 @@ Strongly recommended in production: `REDIS_CACHE_URL` (shared rate limiting acro
 | `GET /api/v1/catalog/products/{sku-or-code}/` | One product by SKU, alternative SKU or barcode |
 | `GET /api/v1/catalog/products/legacy/?ids=0,12,45` | Products by old website id, in the order given (old quote links) |
 | `GET /api/v1/catalog/categories/`, `/brands/` | Navigation |
+| `POST /api/v1/quote-requests/` (header `Idempotency-Key`) | Website basket → draft quotation; returns the quote number and a WhatsApp link. Rate limited |
 | `GET /api/v1/business-profile/` | Contact details, WhatsApp number, opening hours |
 | `GET /api/v1/docs/` | API documentation (OpenAPI schema at `/api/v1/schema/`) |
 

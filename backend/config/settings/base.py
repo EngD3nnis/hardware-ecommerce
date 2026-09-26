@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "apps.customers",
     "apps.sales",
     "apps.payments",
+    "apps.search",
 ]
 
 MIDDLEWARE = [
@@ -181,6 +182,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "auth": env("THROTTLE_RATE_AUTH", default="10/min"),
         "public": env("THROTTLE_RATE_PUBLIC", default="120/min"),
+        "quote_request": env("THROTTLE_RATE_QUOTE_REQUEST", default="10/hour"),
     },
 }
 

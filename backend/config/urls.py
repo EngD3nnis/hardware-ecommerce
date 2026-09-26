@@ -7,6 +7,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
 from apps.catalog.api import BusinessProfileView
 from apps.core import views as core_views
 from apps.payments.webhooks import mpesa_callback
+from apps.sales.api import QuoteRequestView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -23,6 +24,7 @@ urlpatterns = [
     path("api/v1/business-profile/", BusinessProfileView.as_view(), name="business-profile"),
     path("api/v1/catalog/", include("apps.catalog.urls")),
     path("api/v1/inventory/", include("apps.inventory.urls")),
+    path("api/v1/quote-requests/", QuoteRequestView.as_view(), name="quote-requests"),
 ]
 
 if settings.DEBUG:

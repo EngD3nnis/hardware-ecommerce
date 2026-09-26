@@ -40,6 +40,8 @@ var CATALOG=[{"id":0,"sku":"DWX-0000","cat":"Bathroom utilities & Accessories","
 var WA='254787151516';
 
 function pid(p){ return 'P-'+String(p.id).padStart(4,'0'); }
+// Escape text before putting it into HTML (product data will come from the backend).
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function catLabel(p){ return (p.sub&&p.sub!==p.cat)?p.sub+' ('+p.cat+')':p.cat; }
 
 function waMsg(products){
@@ -86,8 +88,8 @@ var WASVG='<svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" s
   // Show product list immediately
   var items=prods.map(function(p){
     return '<div class="prod-item">'+
-      '<div class="prod-name">'+p.name+'</div>'+
-      '<div class="prod-cat">'+catLabel(p)+'</div>'+
+      '<div class="prod-name">'+esc(p.name)+'</div>'+
+      '<div class="prod-cat">'+esc(catLabel(p))+'</div>'+
       '<div class="prod-sku">'+(p.sku||pid(p))+'</div>'+
     '</div>';
   }).join('');

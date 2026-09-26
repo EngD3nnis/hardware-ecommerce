@@ -16,6 +16,7 @@ from apps.core.exceptions import NotFound, ValidationError
 from apps.core.models import BusinessProfile
 from apps.pricing import services as pricing
 from apps.pricing.models import PriceList
+from apps.search.services import search_products
 
 from . import selectors
 from .models import Brand, Category, Product, ProductStatus
@@ -171,7 +172,7 @@ class BrandListView(PublicCatalogMixin, generics.ListAPIView):
     parameters=[
         OpenApiParameter("category", str, description="Category or subcategory slug"),
         OpenApiParameter("brand", str, description="Brand slug"),
-        OpenApiParameter("q", str, description="SKU, barcode or words in the name"),
+        OpenApiParameter("q", str, description="Search: SKU, barcode, old website id, words (typos and synonyms ok)"),
     ]
 )
 class ProductListView(PublicCatalogMixin, generics.ListAPIView):
@@ -180,13 +181,14 @@ class ProductListView(PublicCatalogMixin, generics.ListAPIView):
 
     def get_queryset(self):
         params = self.request.query_params
-        qs = selectors.public_products()
-        return selectors.filter_products(
-            qs,
+        qs = selectors.filter_products(
+            selectors.public_products(),
             category=params.get("category", "").strip(),
             brand=params.get("brand", "").strip(),
-            q=params.get("q", "").strip()[:100],
         )
+        q = params.get("q", "").strip()
+        # Ranked search (apps.search) when there is a query; alphabetical otherwise.
+        return search_products(q, qs) if q else qs
 
 
 class ProductDetailView(PublicCatalogMixin, generics.RetrieveAPIView):
