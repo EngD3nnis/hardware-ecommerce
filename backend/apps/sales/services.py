@@ -17,6 +17,7 @@ from apps.core.timeutils import business_today
 from apps.customers.models import Customer
 from apps.inventory import services as inventory
 from apps.inventory.models import Reservation, ReservationStatus
+from apps.notifications import services as notifications
 from apps.pricing import services as pricing
 
 from .models import (
@@ -197,6 +198,8 @@ def send_quotation(quote: Quotation, actor: Actor) -> Quotation:
     quote.sent_at = timezone.now()
     _set_quote_status(quote, QuoteStatus.SENT, actor)
     quote.save()
+    if quote.customer:
+        notifications.notify("quote_sent", quote, customer=quote.customer, actor=actor)
     return quote
 
 
@@ -385,7 +388,9 @@ def confirm_order(order: Order, actor: Actor) -> Order:
     if not order.lines.exists():
         raise ValidationError("The order has no lines.")
     order.total = sum((line.line_total for line in order.lines.all()), Decimal("0.00"))
-    return transition(order, OrderStatus.CONFIRMED, actor)
+    transition(order, OrderStatus.CONFIRMED, actor)
+    notifications.notify("order_confirmed", order, customer=order.customer, actor=actor)
+    return order
 
 
 @transaction.atomic

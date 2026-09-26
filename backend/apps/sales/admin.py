@@ -91,6 +91,17 @@ class QuotationAdmin(admin.ModelAdmin):
         suffix = "" if obj.is_fully_priced else " (some lines not priced)"
         return f"KES {obj.total:,.2f}{suffix}"
 
+    @admin.display(description="Send via WhatsApp")
+    def whatsapp_link(self, obj):
+        from django.utils.html import format_html
+
+        from apps.notifications.services import render, whatsapp_click_to_chat
+
+        if not obj or obj.status != QuoteStatus.SENT or not (obj.customer and obj.customer.phone):
+            return "Available once sent, for customers with a phone number."
+        url = whatsapp_click_to_chat(obj.customer.phone, render("quote_sent", obj))
+        return format_html('<a class="button" href="{}" target="_blank" rel="noopener">Open WhatsApp</a>', url)
+
     @admin.display(description="Order")
     def linked_order(self, obj):
         return getattr(obj, "order", None) or "—"

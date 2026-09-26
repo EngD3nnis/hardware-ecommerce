@@ -6,6 +6,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
 
 from apps.catalog.api import BusinessProfileView
 from apps.core import views as core_views
+from apps.notifications.webhooks import whatsapp_webhook
 from apps.payments.webhooks import mpesa_callback
 from apps.sales.api import QuoteRequestView
 
@@ -17,6 +18,7 @@ urlpatterns = [
     path("metrics", core_views.metrics, name="metrics"),
     # Inbound webhooks (server-to-server)
     path("webhooks/mpesa/<str:token>/", mpesa_callback, name="mpesa-callback"),
+    path("webhooks/whatsapp/", whatsapp_webhook, name="whatsapp-webhook"),
     # API v1
     path("api/v1/schema/", SpectacularAPIView.as_view(), name="api-schema"),
     path("api/v1/docs/", SpectacularRedocView.as_view(url_name="api-schema"), name="api-docs"),

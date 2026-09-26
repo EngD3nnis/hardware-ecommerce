@@ -113,3 +113,12 @@ Order status moves are listed in `sales.services.ORDER_TRANSITIONS` (e.g. DELIVE
 ## fulfillment
 
 `Fulfillment` (one per order): PICKING → PACKED → DISPATCHED → DELIVERED, driving the order status. **Dispatch** consumes the order's reservations (SALE movements), so stock leaves the ledger exactly when goods leave the shop. Pickup orders are delivered at hand-over, which records the collector's name. Unpaid orders are held at dispatch unless the user has `fulfillment.dispatch_unpaid` (account customers); the releasing person is recorded.
+
+## notifications
+
+| Model | Purpose | DB-enforced rules |
+|---|---|---|
+| `OutboundMessage` | Outbox for customer messages (QUEUED → SENT → DELIVERED/READ, or FAILED/CANCELLED) with attempts, errors and the related object | idempotency key unique (one message per event); provider message id unique |
+| `InboundMessage` | Customer messages received via the WhatsApp webhook (signature verified), stored before anything reads them | provider message id unique (redeliveries ignored) |
+
+`notify()` is called from the sales/payments/fulfilment services. It never raises, so a messaging problem cannot undo a sale. Business-initiated WhatsApp messages require `Customer.whatsapp_opt_in`. Channel adapters (console, WhatsApp Cloud, email, disabled) are chosen by `NOTIFICATION_BACKENDS`.

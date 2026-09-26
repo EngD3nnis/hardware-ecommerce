@@ -112,6 +112,12 @@ Strongly recommended in production: `REDIS_CACHE_URL` (shared rate limiting acro
 
 Orders → *Start picking* (creates the fulfilment; print the pick list from Fulfilments) → *Mark packed* → *Dispatch / hand over* (stock leaves the ledger; pickup is complete here) → *Mark delivered*. Goods are not released unpaid unless the user has *release unpaid goods*.
 
+## Customer messages (WhatsApp)
+
+- Customers get messages when a quote is sent, an order is confirmed, a payment is received, a pickup order is ready, and a delivery leaves. They get them only if they have opted in to WhatsApp. Messages are in Admin → Outbound messages, where failed ones can be retried.
+- Until the WhatsApp Cloud API is set up (`NOTIFY_WHATSAPP_BACKEND=whatsapp_cloud` plus `WHATSAPP_*` settings), messages are only logged (`console`). Staff can still send a sent quotation from their own phone with the quotation's **Open WhatsApp** button.
+- Incoming WhatsApp messages (webhook `/webhooks/whatsapp/`, signature-verified) appear in Admin → Inbound messages.
+
 ## Operational endpoints
 
 | Endpoint | Purpose |

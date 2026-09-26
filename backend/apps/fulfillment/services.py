@@ -8,6 +8,7 @@ from apps.core.actors import Actor
 from apps.core.exceptions import Conflict, PermissionDenied, ValidationError
 from apps.inventory import services as inventory
 from apps.inventory.models import ReservationStatus
+from apps.notifications import services as notifications
 from apps.sales import services as sales
 from apps.sales.models import DeliveryMethod, Order, OrderStatus, PaymentStatus
 
@@ -47,6 +48,8 @@ def mark_packed(fulfillment: Fulfillment, actor: Actor) -> Fulfillment:
     sales.transition(order, OrderStatus.PACKED, actor)
     fulfillment.status, fulfillment.packed_at = FulfillmentStatus.PACKED, timezone.now()
     fulfillment.save()
+    if fulfillment.method == DeliveryMethod.PICKUP:
+        notifications.notify("ready_for_pickup", order, customer=order.customer, actor=actor)
     return fulfillment
 
 
@@ -104,6 +107,8 @@ def dispatch(
         sales.transition(order, OrderStatus.DELIVERED, actor, reason=f"Collected by {recipient_name}")
         fulfillment.status, fulfillment.delivered_at = FulfillmentStatus.DELIVERED, now
     fulfillment.save()
+    if fulfillment.method == DeliveryMethod.DELIVERY:
+        notifications.notify("order_dispatched", order, customer=order.customer, actor=actor)
     audit.record(
         actor,
         "fulfillment.dispatched",

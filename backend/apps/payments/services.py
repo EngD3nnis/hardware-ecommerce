@@ -10,6 +10,7 @@ from apps.audit import services as audit
 from apps.core.actors import Actor
 from apps.core.exceptions import Conflict, PermissionDenied, ValidationError
 from apps.customers.services import normalise_phone
+from apps.notifications import services as notifications
 from apps.sales import services as sales
 from apps.sales.models import Order, OrderStatus
 
@@ -70,6 +71,7 @@ def record_payment(
             )
     except IntegrityError as exc:
         raise Conflict(f"Reference {reference} has already been recorded as a payment.") from exc
+    notifications.notify("payment_received", payment, customer=order.customer, actor=actor)
     audit.record(
         actor,
         "payments.payment.recorded",
@@ -153,6 +155,7 @@ def process_mpesa_event(event: InboundPaymentEvent) -> InboundPaymentEvent:
         payment.provider_reference = callback.receipt_number
         payment.received_at = mpesa.parse_transaction_date(callback.transaction_date) or timezone.now()
         payment.save(update_fields=["state", "provider_reference", "received_at", "updated_at"])
+        notifications.notify("payment_received", payment, customer=payment.order.customer, actor=actor)
     audit.record(
         actor,
         "payments.mpesa.callback",

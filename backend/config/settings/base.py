@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "apps.payments",
     "apps.search",
     "apps.fulfillment",
+    "apps.notifications",
 ]
 
 MIDDLEWARE = [
@@ -269,6 +270,22 @@ MPESA_TRANSACTION_TYPE = env("MPESA_TRANSACTION_TYPE", default="CustomerPayBillO
 MPESA_CALLBACK_BASE_URL = env("MPESA_CALLBACK_BASE_URL", default="")  # public https base URL of this server
 MPESA_CALLBACK_TOKEN = env("MPESA_CALLBACK_TOKEN", default="")  # long random secret, part of the callback URL
 MPESA_CALLBACK_ALLOWED_IPS = env.list("MPESA_CALLBACK_ALLOWED_IPS", default=[])
+
+# --- Customer messaging ------------------------------------------------------------
+# Adapter per channel: console (log only), whatsapp_cloud, email, disabled.
+NOTIFICATION_BACKENDS = {
+    "WHATSAPP": env("NOTIFY_WHATSAPP_BACKEND", default="console"),
+    "EMAIL": env("NOTIFY_EMAIL_BACKEND", default="console"),
+    "SMS": env("NOTIFY_SMS_BACKEND", default="disabled"),
+}
+WHATSAPP_API_VERSION = env("WHATSAPP_API_VERSION", default="v21.0")
+WHATSAPP_PHONE_NUMBER_ID = env("WHATSAPP_PHONE_NUMBER_ID", default="")
+WHATSAPP_ACCESS_TOKEN = env("WHATSAPP_ACCESS_TOKEN", default="")
+WHATSAPP_APP_SECRET = env("WHATSAPP_APP_SECRET", default="")  # verifies webhook signatures
+WHATSAPP_VERIFY_TOKEN = env("WHATSAPP_VERIFY_TOKEN", default="")  # webhook subscription handshake
+# Approved template names for business-initiated messages, by message kind, e.g. {"order_confirmed": "order_update"}
+WHATSAPP_TEMPLATES = env.json("WHATSAPP_TEMPLATES", default={})
+WHATSAPP_TEMPLATE_LANGUAGE = env("WHATSAPP_TEMPLATE_LANGUAGE", default="en")
 
 # --- Object storage (S3-compatible, e.g. Cloudflare R2) ----------------------
 # Wired up with django-storages in Stage 2.
