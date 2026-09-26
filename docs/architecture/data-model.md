@@ -87,3 +87,25 @@ available = on_hand − reserved; incoming = open PO quantity not yet received.
 | `GoodsReceipt`, `GoodsReceiptLine` | What arrived; drives PURCHASE_RECEIVED movements | idempotency key unique |
 
 Approval policy: `PURCHASE_AUTO_APPROVE_LIMIT` (default 0, so every order is approved explicitly) and `PURCHASE_APPROVER_MUST_DIFFER`. Agents can draft and submit, never approve, send or receive.
+
+## customers
+
+`Customer`: name, kind (individual/contractor/business), phone (E.164 digits, unique when present; `normalise_phone` accepts 07…, +254…), email, KRA PIN, address, WhatsApp opt-in. Customers are not login accounts.
+
+## sales
+
+| Model | Purpose | DB-enforced rules |
+|---|---|---|
+| `Quotation`, `QuotationLine` | DRAFT → SENT → ACCEPTED → CONVERTED (or REJECTED/EXPIRED). Lines snapshot sku/name/unit/attributes/price | one line per product; qty > 0; price ≥ 0 |
+| `Order`, `OrderLine` | `status` (goods) and `payment_status` (money, derived from payments) are separate; lines are snapshots | quotation→order one-to-one; every line priced; refunded ≤ paid |
+| `OrderEvent` | Every status/payment-status change and note, with actor and correlation id | — |
+
+Order status moves are listed in `sales.services.ORDER_TRANSITIONS` (e.g. DELIVERED never goes back to PICKING). An order with unrefunded payments cannot be cancelled.
+
+## payments
+
+| Model | Purpose | DB-enforced rules |
+|---|---|---|
+| `Payment` | Cash/bank/M-Pesa; PENDING → COMPLETED/FAILED | amount > 0; provider reference (M-Pesa receipt) unique; CheckoutRequestID unique |
+| `Refund` | Money returned, recorded by a person with `record_refund` | amount > 0; total refunds ≤ payment (service) |
+| `InboundPaymentEvent` | Every webhook stored before processing | unique (provider, event_id): duplicate deliveries are harmless |

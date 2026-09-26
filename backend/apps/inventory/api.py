@@ -36,10 +36,15 @@ class AvailabilityView(APIView):
             raise NotFound("No such product.")
         totals = services.availability(product)
         locations = [
-            {"location": b.location.code, "on_hand": str(b.on_hand), "reserved": str(b.reserved),
-             "available": str(b.available), "damaged": str(b.damaged)}
+            {
+                "location": b.location.code,
+                "on_hand": str(b.on_hand),
+                "reserved": str(b.reserved),
+                "available": str(b.available),
+                "damaged": str(b.damaged),
+            }
             for b in StockBalance.objects.filter(product=product).select_related("location")
-        ]  # fmt: skip
+        ]
         return Response(
             {
                 "sku": product.sku,

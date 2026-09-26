@@ -56,6 +56,9 @@ INSTALLED_APPS = [
     "apps.pricing",
     "apps.inventory",
     "apps.procurement",
+    "apps.customers",
+    "apps.sales",
+    "apps.payments",
 ]
 
 MIDDLEWARE = [
@@ -231,6 +234,11 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.inventory.tasks.release_expired_reservations",
         "schedule": timedelta(minutes=10),
     },
+    "expire-quotations": {"task": "apps.sales.tasks.expire_quotations", "schedule": timedelta(hours=1)},
+    "process-stuck-payment-events": {
+        "task": "apps.payments.tasks.process_stuck_payment_events",
+        "schedule": timedelta(minutes=15),
+    },
     "reconcile-inventory": {
         "task": "apps.inventory.tasks.reconcile_inventory",
         "schedule": timedelta(hours=24),
@@ -244,6 +252,20 @@ CELERY_BEAT_SCHEDULE = {
 PURCHASE_AUTO_APPROVE_LIMIT = env.int("PURCHASE_AUTO_APPROVE_LIMIT", default=0)
 # Separation of duties: the approver must not be the person who created the order.
 PURCHASE_APPROVER_MUST_DIFFER = env.bool("PURCHASE_APPROVER_MUST_DIFFER", default=False)
+
+# Standard Kenyan VAT rate, used to show the VAT included in VAT-inclusive prices.
+VAT_RATE = env.float("VAT_RATE", default=0.16)
+
+# --- M-Pesa (Safaricom Daraja STK push) ------------------------------------------
+MPESA_ENVIRONMENT = env("MPESA_ENVIRONMENT", default="sandbox")  # sandbox | production
+MPESA_CONSUMER_KEY = env("MPESA_CONSUMER_KEY", default="")
+MPESA_CONSUMER_SECRET = env("MPESA_CONSUMER_SECRET", default="")
+MPESA_SHORTCODE = env("MPESA_SHORTCODE", default="")
+MPESA_PASSKEY = env("MPESA_PASSKEY", default="")
+MPESA_TRANSACTION_TYPE = env("MPESA_TRANSACTION_TYPE", default="CustomerPayBillOnline")  # or CustomerBuyGoodsOnline
+MPESA_CALLBACK_BASE_URL = env("MPESA_CALLBACK_BASE_URL", default="")  # public https base URL of this server
+MPESA_CALLBACK_TOKEN = env("MPESA_CALLBACK_TOKEN", default="")  # long random secret, part of the callback URL
+MPESA_CALLBACK_ALLOWED_IPS = env.list("MPESA_CALLBACK_ALLOWED_IPS", default=[])
 
 # --- Object storage (S3-compatible, e.g. Cloudflare R2) ----------------------
 # Wired up with django-storages in Stage 2.

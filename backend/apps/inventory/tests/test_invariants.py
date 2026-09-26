@@ -15,12 +15,13 @@ from apps.inventory.services import Source
 
 OPERATIONS = st.lists(
     st.tuples(
-        st.sampled_from(["receive", "remove", "reserve", "release", "consume", "damage", "write_off", "recover",
-                         "return"]),
+        st.sampled_from(
+            ["receive", "remove", "reserve", "release", "consume", "damage", "write_off", "recover", "return"]
+        ),
         st.integers(min_value=1, max_value=6),
     ),
     max_size=40,
-)  # fmt: skip
+)
 
 
 @pytest.mark.django_db

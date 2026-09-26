@@ -17,9 +17,17 @@ def admin_client(client, superuser):
 
 @pytest.mark.parametrize(
     "name",
-    ["inventory_stocklocation", "inventory_stockbalance", "inventory_stockmovement", "inventory_reservation",
-     "inventory_stockadjustment", "inventory_stockcount", "procurement_supplier", "procurement_purchaseorder"],
-)  # fmt: skip
+    [
+        "inventory_stocklocation",
+        "inventory_stockbalance",
+        "inventory_stockmovement",
+        "inventory_reservation",
+        "inventory_stockadjustment",
+        "inventory_stockcount",
+        "procurement_supplier",
+        "procurement_purchaseorder",
+    ],
+)
 def test_changelists_load(admin_client, name):
     services.receive(ProductFactory(), 3, Actor.system())
     assert admin_client.get(reverse(f"admin:{name}_changelist")).status_code == 200

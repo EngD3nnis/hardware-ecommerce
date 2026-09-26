@@ -171,9 +171,13 @@ class TestAdjustmentsAndCounts:
         with pytest.raises(ValidationError):
             services.record_adjustment(system_actor, product=product, location=shop, kind="FOUND", quantity=1, note="")
         adj = services.record_adjustment(
-            system_actor, product=product, location=shop, kind=AdjustmentKind.OPENING_BALANCE, quantity=12,
+            system_actor,
+            product=product,
+            location=shop,
+            kind=AdjustmentKind.OPENING_BALANCE,
+            quantity=12,
             note="Initial count",
-        )  # fmt: skip
+        )
         movement = StockMovement.objects.get(source_type="inventory.stockadjustment", source_id=str(adj.pk))
         assert movement.reason == MovementReason.OPENING_BALANCE and balance(product).on_hand == 12
 

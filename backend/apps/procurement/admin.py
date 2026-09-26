@@ -68,16 +68,41 @@ class PurchaseOrderAdmin(admin.ModelAdmin):
     inlines = (PurchaseOrderLineInline,)
     actions = ("submit_orders", "approve_orders", "mark_orders_sent", "cancel_orders")
     readonly_fields = (
-        "number", "status", "order_total", "receive_link", "created_by", "created_by_agent", "submitted_at",
-        "approved_by", "approved_at", "sent_at", "received_at", "cancelled_at", "cancel_reason",
-    )  # fmt: skip
+        "number",
+        "status",
+        "order_total",
+        "receive_link",
+        "created_by",
+        "created_by_agent",
+        "submitted_at",
+        "approved_by",
+        "approved_at",
+        "sent_at",
+        "received_at",
+        "cancelled_at",
+        "cancel_reason",
+    )
     fieldsets = (
         (None, {"fields": ("number", "supplier", "location", "status", "order_total", "receive_link")}),
         ("Details", {"fields": ("expected_date", "notes")}),
-        ("History", {"classes": ("collapse",), "fields": (
-            "created_by", "created_by_agent", "submitted_at", "approved_by", "approved_at", "sent_at",
-            "received_at", "cancelled_at", "cancel_reason")}),
-    )  # fmt: skip
+        (
+            "History",
+            {
+                "classes": ("collapse",),
+                "fields": (
+                    "created_by",
+                    "created_by_agent",
+                    "submitted_at",
+                    "approved_by",
+                    "approved_at",
+                    "sent_at",
+                    "received_at",
+                    "cancelled_at",
+                    "cancel_reason",
+                ),
+            },
+        ),
+    )
 
     def get_readonly_fields(self, request, obj=None):
         fields = list(self.readonly_fields)

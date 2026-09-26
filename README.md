@@ -96,6 +96,12 @@ Strongly recommended in production: `REDIS_CACHE_URL` (shared rate limiting acro
 - **Purchasing:** Admin → Purchase orders → Submit → Approve (needs the approve permission) → Mark sent → **Receive goods**, which updates stock and the supplier's last cost.
 - **Background jobs:** run `celery -A config beat` alongside the worker. It releases expired reservations every 10 minutes and reconciles the ledger nightly.
 
+## Sales & payments
+
+- **Quotations:** Admin → Quotations. Add the customer and products; list prices fill in automatically, and price-on-request lines are priced by hand. Then *Mark as sent* → *Customer accepted* → *Convert to order*, which reserves stock.
+- **Orders:** status changes only through actions. *Cancel* releases stock and needs the cancel permission. An order with money paid can't be cancelled until the refund is recorded.
+- **Payments:** Admin → Payments → Add, for cash/bank/paybill (a reference is required for M-Pesa/bank). STK push uses `apps.payments.services.request_mpesa_payment`, and the callback URL is `/webhooks/mpesa/<MPESA_CALLBACK_TOKEN>/`. Refunds need the *record refunds* permission.
+
 ## Operational endpoints
 
 | Endpoint | Purpose |
